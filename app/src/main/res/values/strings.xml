@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Net Request</string>
     <string name="loading">加载中...</string>
+    <string name="id">id</string>
+    <string name="link">link</string>
+    <string name="name">name</string>
+    <string name="order">order</string>
+    <string name="visible">visible</string>
 </resources>

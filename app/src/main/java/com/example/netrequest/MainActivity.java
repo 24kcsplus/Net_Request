@@ -2,16 +2,14 @@ package com.example.netrequest;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,37 +19,38 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     private TextView mTvJson;
-    private Handler mHandler;
-
+    private RecyclerView mRvMainJsonData;
     private JsonData jsonData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initView();
-        sendGetRequest("https://www.wanandroid.com/hotkey/json",jsonData -> {setText(jsonData);});
-//        mHandler=new MyHandler();
-//        if (jsonData != null) setText(jsonData);
-        Log.d("onCreate","test");
+        sendGetRequest("https://www.wanandroid.com/hotkey/json", this::setText);
+        Log.d("onCreate", "test");
     }
 
     private void initView() {
+        mRvMainJsonData = findViewById(R.id.rv_main_json_data);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        mRvMainJsonData.setLayoutManager(layoutManager);
+        DataAdapter dataAdapter = new DataAdapter(jsonData.data);
+        mRvMainJsonData.setAdapter(dataAdapter);
+    }
+
+    private void setText() {
         mTvJson = findViewById(R.id.JSON_text);
+        mTvJson.setVisibility(View.INVISIBLE);
+        initView();
     }
 
-    private void setText(JsonData jsonData){
-        mTvJson.setText(jsonData.toString());
-    }
-
-    private void sendGetRequest(String mUrl, JsonDataListener listener){
+    private void sendGetRequest(String mUrl, JsonDataListener listener) {
         //lambda表达式，相当于其中new Runnable并且重写方法
         new Thread(
                 () -> {
@@ -60,13 +59,9 @@ public class MainActivity extends AppCompatActivity {
                         connection.connect();//正式连接
                         InputStream in = connection.getInputStream();//从接口处获取
                         String responseData = StreamToString(in);//这里就是服务器返回的数据
-                        Log.d("lx", "sendGetNetRequest: "+responseData);
+                        Log.d("lx", "sendGetRequest: " + responseData);
                         jsonData = decodeJson(responseData); // 解析 JSON 字符串
-                        if (jsonData != null){
-                            runOnUiThread(() -> {
-                                listener.onDataReceived(jsonData);
-                            });
-                        }
+                        runOnUiThread(listener::onDataReceived);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -87,15 +82,6 @@ public class MainActivity extends AppCompatActivity {
         connection.setRequestProperty("Accept-Encoding",
                 "gzip,deflate");
         return connection;
-    }
-
-    private class MyHandler extends Handler {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            String result = (String) msg.obj;
-            setText(decodeJson(result));
-        }
     }
 
     private String StreamToString(InputStream in) {
@@ -138,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
                 detailData.visible = jsonObject1.getInt("visible");
                 jsonData.data.add(detailData);
             }
+            Log.d("MainActivity.decodeJson", jsonData.toString());
         } catch (Exception e) {
             Log.e("tag", "decodeJson: ", e);
         }
