@@ -4,6 +4,6 @@
     <style name="horizontal_line_style">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1px</item>
-        <item name="android:background">@color/black</item>
+        <item name="android:background">?attr/colorControlNormal</item>
     </style>
 </resources>
